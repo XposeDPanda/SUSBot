@@ -34,24 +34,25 @@ class AmongUs(commands.Cog):
     async def leave(self, ctx):
         if any([ctx.message.author.id in game['players'] for key, game in currentGames.items()]):
             await self.removePlayer(key, game, ctx.message.author)
-            await self.deleteGame()
+            if keys_to_remove:
+                await self.deleteGame()
 
     async def addPlayer(self, game, member):
         textChannel = self.client.get_channel(game['textID'])
         game['players'].append(member.id)
-        await textChannel.edit(overwrites={
-            member.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            member: discord.PermissionOverwrite(send_messages=True),
-            member:discord.PermissionOverwrite(read_messages=True)
-        })
+        overwrite = textChannel.overwrites_for(member)
+        overwrite.read_messages = True
+        overwrite.send_messages = True
+        await textChannel.set_permissions(member, overwrite=overwrite)
 
     async def removePlayer(self, key, game, member):
         textChannel = self.client.get_channel(game['textID'])
         voiceChannel = self.client.get_channel(game['voiceID'])
         game['players'].remove(member.id)
-        await textChannel.edit(overwrites={
-            member.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        })
+        overwrite = textChannel.overwrites_for(member)
+        overwrite.send_messages = False
+        overwrite.read_messages = False
+        await textChannel.set_permissions(member, overwrite=overwrite)
         if not game['players']:
             await textChannel.delete()
             await voiceChannel.delete()
@@ -73,8 +74,6 @@ class AmongUs(commands.Cog):
                 textOverwrites = {
                     ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
                     ctx.guild.me: discord.PermissionOverwrite(read_messages=True),
-                    ctx.message.author: discord.PermissionOverwrite(read_messages=True),
-                    ctx.message.author: discord.PermissionOverwrite(send_messages=True)
                 }
 
                 # create game object and add to current games
@@ -83,10 +82,11 @@ class AmongUs(commands.Cog):
                 text = await ctx.guild.create_text_channel(name=f'Game{len(currentGames)+1} Text', category=category, overwrites=textOverwrites)
                 game['voiceID'] = voice.id
                 game['textID'] = text.id
-                game['players'] = [ctx.message.author.id]
+                game['players'] = []
                 currentGames[f'{len(currentGames)}'] = game
+                await self.addPlayer(game, ctx.message.author)
 
-                await ctx.send(f'Hey Everyone!! {ctx.message.author.mention} just started a game! Come and play!')
+                await ctx.send(f'Hey Everyone!! {ctx.message.author.mention} just started a game! Come and <@&764151254976036874>!')
         except Exception as err:
             await ctx.send(err)
     
