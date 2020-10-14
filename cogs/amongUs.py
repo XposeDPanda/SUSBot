@@ -24,7 +24,8 @@ class AmongUs(commands.Cog):
                     if after.channel and after.channel.id == game['voiceID']:
                         if member.id not in game['players']:
                             await self.addPlayer(game, member)
-            self.deleteGame()
+            if keys_to_remove:
+                await self.deleteGame()
         except Exception as err:
             print(err)
     
@@ -32,15 +33,16 @@ class AmongUs(commands.Cog):
     @commands.guild_only()
     async def leave(self, ctx):
         if any([ctx.message.author.id in game['players'] for key, game in currentGames.items()]):
-            self.removePlayer(key, game, ctx.message.author)
-            self.deleteGame()
+            await self.removePlayer(key, game, ctx.message.author)
+            await self.deleteGame()
 
     async def addPlayer(self, game, member):
         textChannel = self.client.get_channel(game['textID'])
         game['players'].append(member.id)
         await textChannel.edit(overwrites={
-            member: discord.PermissionOverwrite(read_messages=True),
-            member: discord.PermissionOverwrite(send_messages=True)
+            member.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            member: discord.PermissionOverwrite(send_messages=True),
+            member:discord.PermissionOverwrite(read_messages=True)
         })
 
     async def removePlayer(self, key, game, member):
@@ -48,16 +50,14 @@ class AmongUs(commands.Cog):
         voiceChannel = self.client.get_channel(game['voiceID'])
         game['players'].remove(member.id)
         await textChannel.edit(overwrites={
-            member: discord.PermissionOverwrite(read_messages=False),
-            member: discord.PermissionOverwrite(send_messages=False)
+            member.guild.default_role: discord.PermissionOverwrite(read_messages=False),
         })
         if not game['players']:
             await textChannel.delete()
             await voiceChannel.delete()
             keys_to_remove.append(key)
     
-    async def deleteGame():
-        if keys_to_remove:
+    async def deleteGame(self):
             for key in keys_to_remove:
                 del currentGames[key]
 
