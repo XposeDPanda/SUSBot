@@ -33,7 +33,7 @@ class AmongUs(commands.Cog):
     async def leave(self, ctx):
         if any([ctx.message.author.id in game['players'] for key, game in currentGames.items()]):
             self.removePlayer(key, game, ctx.message.author)
-            deleteGame()
+            self.deleteGame()
 
     async def addPlayer(self, game, member):
         textChannel = self.client.get_channel(game['textID'])
