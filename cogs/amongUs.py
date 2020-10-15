@@ -86,7 +86,7 @@ class AmongUs(commands.Cog):
                 currentGames[f'{len(currentGames)}'] = game
                 await self.addPlayer(game, ctx.message.author)
 
-                await ctx.send(f'Hey Everyone!! {ctx.message.author.mention} just started a game! Come and <@&7641512549760368744>!')
+                await ctx.send(f'Hey Everyone!! {ctx.message.author.mention} just started a game! Come and <@&764151254976036874>!')
         except Exception as err:
             await ctx.send(err)
     
