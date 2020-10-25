@@ -1,2 +1,2 @@
 # SUSBot
-A Discord bot to help with the creation/finding of Among Us Games on discord.
+This Project is no longer being updated, It has been merged into my other project: Zoo Keeper Bot.
